@@ -18,7 +18,7 @@
     | INTC of int | NAME of string
     | EOF
 
-%nonterm Prog of expr | Expr of expr | AtomExpr of expr | Const of expr
+%nonterm Prog of expr | Decl of expr | Expr of expr | AtomExpr of expr | Const of expr
 
 %right SEMIC DARROW
 %nonassoc IF
@@ -39,3 +39,6 @@
 %start Prog
 
 %%
+
+Prog : Expr (Expr)
+	   | Decl (Decl)

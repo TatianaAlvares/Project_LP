@@ -56,8 +56,6 @@ fun strToInt s =
 fun init() = ()
 %%
 
-(*Definitions*)
-
 %header (functor PlcLexerFun(structure Tokens: PlcParser_TOKENS));
 alpha=[A-Za-z];
 digit=[0-9]+;
