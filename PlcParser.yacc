@@ -18,7 +18,7 @@
     | INTC of int | NAME of string
     | EOF
 
-%nonterm Prog of expr | Decl of expr | Expr of expr | AtomExpr of expr | Const of expr
+%nonterm Prog of expr | Decl of expr | Expr of expr | AtomExpr of expr | AppExpr of expr | Const of expr | Comps of expr list | MatchExpr of (expr option * expr) list  | CondExpr of expr list | Args of (plcType * string) list | Params of (plcType * string) list | TypedVar of (plcType * string) | Type of plcType | AtomType of plcType | TypeS of plcType list
 
 %right SEMIC DARROW
 %nonassoc IF
