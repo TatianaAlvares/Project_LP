@@ -1,14 +1,14 @@
 (*Absyn*)
 
 datatype plcType =
-   IntT
+    IntT
   | BoolT
   | FunT of plcType * plcType
   | ListT of plcType list
   | SeqT of plcType;
 
 datatype expr =
-   ConI of int
+    ConI of int
   | ConB of bool
   | ESeq of plcType
   | Var of string
@@ -25,7 +25,7 @@ datatype expr =
 
 
 datatype plcVal =
-   BoolV of bool
+    BoolV of bool
   | IntV of int
   | ListV of plcVal list
   | SeqV of plcVal list
