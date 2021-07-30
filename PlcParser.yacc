@@ -19,9 +19,23 @@
     | INTC of int | NAME of string
     | EOF
 
-%nonterm Prog of expr | Decl | Expr of expr | AtomExpr of expr | AppExpr of expr | Const of expr | Comps of expr list | MatchExpr of (expr option * expr) list  | CondExpr of expr list | Args of (plcType * string) list | Params of (plcType * string) list | TypedVar of (plcType * string) | Type of plcType | AtomType of plcType | TypeS of plcType list
+%nonterm Prog of expr 
+        | Decl of expr
+        | Expr of expr 
+        | AtomExpr of expr 
+        | AppExpr of expr 
+        | Const of expr 
+        | Comps of expr list 
+        | MatchExpr of (expr option * expr) list  
+        | CondExpr of expr list 
+        | Args of (plcType * string) list 
+        | Params of (plcType * string) list 
+        | TypedVar of (plcType * string) 
+        | Type of plcType 
+        | AtomType of plcType 
+        | TypeS of plcType list
 
-%right SEMIC DARROW
+%right SEMIC ARROW
 %nonassoc IF
 %left ELSE
 %left AND
@@ -44,70 +58,75 @@
 Prog : Expr (Expr)
 	   | Decl (Decl)
 
-Decl : VAR NAME EQ Expr ()
-     | FUN NAME Args EQ Expr ()
-     | FUN REC NAME Args COLON Type EQ Expr ()
+Decl : VAR NAME EQ Expr SEMIC Prog (Let(NAME, Expr, Prog))
+     | FUN NAME Args EQ Expr SEMIC Prog (Let(NAME, makeAnon(Args, Expr), Prog))
+     | FUN REC NAME Args COLON Type EQ Expr SEMIC Prog (makeFun(NAME, Args, Type, Expr, Prog))
     
-Expr : AtomExpr ()
-     | AppExpr ()
-     | IF Expr THEN Expr ELSE Expr ()
-     | MATCH Expr WITH MatchExpr ()
-     | EXCL Expr ()
-     | MINUS Expr ()
-     | HD Expr ()
-     | TL Expr ()
-     | ISE Expr ()
-     | PRINT Expr ()
-     | Expr AND Expr ()
-     | Expr PLUS Expr ()
-     | Expr MINUS Expr ()
-     | Expr MULT Expr ()
-     | Expr DIV Expr ()
-     | Expr EQ Expr ()
-     | Expr NOTEQ Expr ()
-     | Expr LESS Expr ()
-     | Expr LESSEQ Expr ()
-     | Expr DCOLON Expr ()
-     | Expr EXCL Expr ()
-     | Expr LBRACK INTC RBRACK ()
+Expr : AtomExpr (AtomExpr)
+     | AppExpr (AppExpr)
+     | IF Expr THEN Expr ELSE Expr (If(Expr1, Expr2, Expr3))
+     | MATCH Expr WITH MatchExpr (Match(Expr, MatchExpr))
+     | EXCL Expr (Prim1("!", Expr))
+     | MINUS Expr (Prim1("-", Expr))
+     | HD Expr (Prim1("hd", Expr))
+     | TL Expr (Prim1("tl", Expr))
+     | ISE Expr (Prim1("ise", Expr))
+     | PRINT Expr (Prim1("print", Expr))
+     | Expr AND Expr (Prim2("&&", Expr1, Expr2))
+     | Expr PLUS Expr (Prim2("+", Expr1, Expr2))
+     | Expr MINUS Expr (Prim2("-", Expr1, Expr2))
+     | Expr MULT Expr (Prim2("*", Expr1, Expr2))
+     | Expr DIV Expr (Prim2("/", Expr1, Expr2))
+     | Expr EQ Expr (Prim2("=", Expr1, Expr2))
+     | Expr NOTEQ Expr (Prim2("!=", Expr1, Expr2))
+     | Expr LESS Expr (Prim2("<", Expr1, Expr2))
+     | Expr LESSEQ Expr (Prim2("<=", Expr1, Expr2))
+     | Expr DCOLON Expr (Prim2("::", Expr1, Expr2))
+     | Expr SEMIC Expr (Prim2(";", Expr1, Expr2))
+     | Expr LBRACK INTC RBRACK (Item(INTC, Expr))
 
-AtomExpr : Const ()
-         | NAME ()
-         | LBRACE Prog RBRACE ()
-         | LPAR Expr RPAR ()
-         | LPAR Comps RPAR ()
-         | FN Args DARROW Expr END ()
+AtomExpr : Const (Const)
+         | NAME (Var(NAME))
+         | LBRACE Prog RBRACE (Prog)
+         | LPAR Expr RPAR (Expr)
+         | LPAR Comps RPAR (List(Comps))
+         | FN Args DARROW Expr END (makeAnon(Args, Expr))
 
-AppExpr : AtomExpr AtomExpr ()
-        | AppExpr AtomExpr ()
+AppExpr : AtomExpr AtomExpr (Call(AtomExpr1, AtomExpr2))
+        | AppExpr AtomExpr (Call (AppExpr, AtomExpr))
 
-Const : TRUE ()
-      | FALSE ()
-      | INTC ()
-      | LPAR RPAR ()
-      | LPAR Type LBRACK RBRACK RPAR ()
+Const : TRUE (ConB(true))
+      | FALSE (ConB(false))
+      | INTC (ConI(INTC))
+      | LPAR RPAR (List [])
+      | LPAR Type LBRACK RBRACK RPAR (ESeq(Type))
 
-Comps : Expr COMMA Expr ()
-      | Expr COMMA Comps ()
+Comps : Expr COMMA Expr (Expr1::Expr2::[])
+      | Expr COMMA Comps (Expr::Comps)
 
-MatchExpr : END ()
-          | VBAR CondExpr ARROW Expr MatchExpr ()
+MatchExpr : END ([])
+          | VBAR CondExpr ARROW Expr MatchExpr ((CondExpr, Expr)::MatchExpr)
 
-CondExpr : Expr ()
-         | UNDER ()
+CondExpr : Expr (SOME(Expr))
+         | UNDER (NONE)
 
-Args : LPAR RPAR ()
-     | LPAR Params RPAR ()
+Args : LPAR RPAR ([])
+     | LPAR Params RPAR (TypedVar::Params)
 
-Params : TypedVar ()
-       | TypedVar COMMA Params ()
+Params : TypedVar (TypedVar::[])
+       | TypedVar COMMA Params (TypedVar::Params)
 
-TypedVar : Type NAME ()
+TypedVar : Type NAME ((Type, NAME))
 
-Type : AtomType ()
-     | LPAR TypeS RPAR ()
-     | LBRACK Type RBRACK ()
-     | Type ARROW Type ()
+Type : AtomType (AtomType)
+     | LPAR TypeS RPAR (ListT(TypeS))
+     | LBRACK Type RBRACK (SeqT(Type))
+     | Type ARROW Type (FunT(Type1, Type2))
 
-TypeS : Type COMMA Type ()
-      | Type COMMA TypeS ()
+AtomType : NIL (ListT([]))
+     | BOOL (BoolT)
+     | INTT (IntT)
+     | LPAR Type RPAR (Type)
+     
+TypeS : Type COMMA Type (Type1::Type2::[])
+      | Type COMMA TypeS (Type::TypeS)

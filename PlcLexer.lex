@@ -66,7 +66,7 @@ identifier=[a-zA-Z_][a-zA-Z_0-9]*;
 
 \n => (lineNumber := !lineNumber + 1; lex());
 {whitespace}+ => (lex());
-{digit}+ => (CINT(strToInt(yytext), yypos, yypos));
+{digit}+ => (INTC(strToInt(yytext), yypos, yypos));
 {identifier}+ => (keyword(yytext), yypos, yypos);
 "+" => (PLUS, yypos, yypos);
 "-" => (MINUS, yypos, yypos);
