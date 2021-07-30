@@ -9,7 +9,7 @@
     | PLUS | MINUS | MULT | DIV
     | TRUE | FALSE | EXCL
     | AND | LESS | LESSEQ | EQ | NOTEQ
-    | LBRACK | RBRACK | DBRACK | UNDER
+    | LBRACK | RBRACK | UNDER
     | LBRACE | RBRACE | LPAR | RPAR 
     | COLON | DCOLON | COMMA
     | ISE | HD | TL | PRINT 
@@ -27,7 +27,7 @@
         | Const of expr 
         | Comps of expr list 
         | MatchExpr of (expr option * expr) list  
-        | CondExpr of expr list 
+        | CondExpr of expr option 
         | Args of (plcType * string) list 
         | Params of (plcType * string) list 
         | TypedVar of (plcType * string) 
@@ -111,7 +111,7 @@ CondExpr : Expr (SOME(Expr))
          | UNDER (NONE)
 
 Args : LPAR RPAR ([])
-     | LPAR Params RPAR (TypedVar::Params)
+     | LPAR Params RPAR (Params)
 
 Params : TypedVar (TypedVar::[])
        | TypedVar COMMA Params (TypedVar::Params)

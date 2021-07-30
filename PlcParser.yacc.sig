@@ -29,7 +29,6 @@ val LPAR:  'a * 'a -> (svalue,'a) token
 val RBRACE:  'a * 'a -> (svalue,'a) token
 val LBRACE:  'a * 'a -> (svalue,'a) token
 val UNDER:  'a * 'a -> (svalue,'a) token
-val DBRACK:  'a * 'a -> (svalue,'a) token
 val RBRACK:  'a * 'a -> (svalue,'a) token
 val LBRACK:  'a * 'a -> (svalue,'a) token
 val NOTEQ:  'a * 'a -> (svalue,'a) token

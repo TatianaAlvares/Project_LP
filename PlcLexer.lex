@@ -30,6 +30,7 @@ fun keyword (s, lpos, rpos) =
       | "match" => MATCH (lpos,rpos)
       | "with" => WITH (lpos,rpos)
       | "end" => END (lpos,rpos)
+      | _ => NAME (s,lpos,rpos)
 
 
 (* A function to print a message error on the screen. *)
@@ -67,29 +68,28 @@ identifier=[a-zA-Z_][a-zA-Z_0-9]*;
 \n => (lineNumber := !lineNumber + 1; lex());
 {whitespace}+ => (lex());
 {digit}+ => (INTC(strToInt(yytext), yypos, yypos));
-{identifier}+ => (keyword(yytext), yypos, yypos);
-"+" => (PLUS, yypos, yypos);
-"-" => (MINUS, yypos, yypos);
-"*" => (MULT, yypos, yypos);
-"/" => (DIV, yypos, yypos);
-"!" => (EXCL, yypos, yypos);
-"&&" => (AND, yypos, yypos);
-"<" => (LESS, yypos, yypos);
-"<=" => (LESSEQ, yypos, yypos);
-"=" => (EQ, yypos, yypos);
-"!=" => (NOTEQ, yypos, yypos);
-"[" => (LBRACK, yypos, yypos);
-"]" => (RBRACK, yypos, yypos);
-"[]" => (DBRACK, yypos, yypos);
-"{" => (LBRACE, yypos, yypos);
-"}" => (RBRACE, yypos, yypos);
-"(" => (LPAR, yypos, yypos);
-")" => (RPAR, yypos, yypos);
-":" => (COLON, yypos, yypos);
-"::" => (DCOLON, yypos, yypos);
-"," => (COMMA, yypos, yypos);
-";" => (SEMIC, yypos, yypos);
-"->" => (ARROW, yypos, yypos);
-"=>" => (DARROW, yypos, yypos);
-"|" => (VBAR, yypos, yypos);
+{identifier}+ => (keyword(yytext, yypos, yypos));
+"+" => (PLUS(yypos, yypos));
+"-" => (MINUS(yypos, yypos));
+"*" => (MULT(yypos, yypos));
+"/" => (DIV(yypos, yypos));
+"!" => (EXCL(yypos, yypos));
+"&&" => (AND(yypos, yypos));
+"<" => (LESS(yypos, yypos));
+"<=" => (LESSEQ(yypos, yypos));
+"=" => (EQ(yypos, yypos));
+"!=" => (NOTEQ(yypos, yypos));
+"[" => (LBRACK(yypos, yypos));
+"]" => (RBRACK(yypos, yypos));
+"{" => (LBRACE(yypos, yypos));
+"}" => (RBRACE(yypos, yypos));
+"(" => (LPAR(yypos, yypos));
+")" => (RPAR(yypos, yypos));
+":" => (COLON(yypos, yypos));
+"::" => (DCOLON(yypos, yypos));
+"," => (COMMA(yypos, yypos));
+";" => (SEMIC(yypos, yypos));
+"->" => (ARROW(yypos, yypos));
+"=>" => (DARROW(yypos, yypos));
+"|" => (VBAR(yypos, yypos));
 . => (error("\n***Lexer error: bad character***\n"); raise Fail("Lexer error: bad character "^ yytext));
