@@ -31,7 +31,7 @@ fromString "fun f(Int x) = x; f(1)";
 fromString "match x with | 0 -> 1| _ -> -1 end";
 fromFile ("example.plc");
 
-use "testParserCasesSt.sml"
+use "testParserCases.sml"
 
 (* Try to add a systematic way of using the test cases in
    testParserCases to stress test your parser *)
