@@ -132,8 +132,8 @@ fun teval (ex:expr) (env: plcType env) : plcType =
         val tyname = teval name env
         val tyheadcase = teval (#2(hd(cases))) env
         fun search (opt, wdo) =
-          if isSome opt then
-            tyname = teval (valOf(opt)) env
+          if Option.isSome opt then
+            tyname = teval (Option.valOf(opt)) env
           else true
         fun rettype (opt, wdo) = tyheadcase = teval wdo env
       in

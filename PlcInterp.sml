@@ -89,22 +89,19 @@ fun eval (e:expr) (env:plcVal env) : plcVal =
       in
         if getBool value then eval iftrue env else eval iffalse env
       end
-    (*| Match (name, cases) =>
-      let
-        val tyname = teval name env
-        val tyheadcase = teval (#2(hd(cases))) env
-        fun search (opt, wdo) =
-          if isSome opt then
-            tyname = teval (valOf(opt)) env
-          else true
-        fun rettype (opt, wdo) = tyheadcase = teval wdo env
-      in
-        if cases = [] then raise NoMatchResults
-        else if List.all search cases then
-          if List.all rettype cases then tyheadcase
-          else raise MatchResTypeDiff
-        else raise MatchCondTypesDiff
-      end*)
+    | Match (name, cases) =>
+      if cases = [] then raise ValueNotFoundInMatch
+      else 
+        let
+          fun search (opt, wtd : expr) =
+            if Option.isSome opt andalso name = Option.valOf opt then true
+            else if not(Option.isSome opt) then true
+            else false
+          val opitem = List.find search cases
+        in
+          if Option.isSome opitem then eval (#2(Option.valOf(opitem))) env
+          else raise ValueNotFoundInMatch
+        end
     | Call (fname, arg) => 
         let
           val funclos = eval fname env
@@ -137,3 +134,5 @@ fun eval (e:expr) (env:plcVal env) : plcVal =
         end
     | Anon (ty, str, exp) => Clos("", str, exp, env)
   ;
+
+  
