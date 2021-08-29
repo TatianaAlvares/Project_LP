@@ -1,4 +1,7 @@
 (* PlcInterp *)
+use "PlcChecker.sml";
+use "Environ.sml";
+use "Absyn.sml";
 
 exception Impossible
 exception HDEmptySeq
@@ -6,54 +9,59 @@ exception TLEmptySeq
 exception ValueNotFoundInMatch
 exception NotAFunc
 
-fun eval (e:expr) (p:plcVal env) : plcVal =
+fun eval (e:expr) (env:plcVal env) : plcVal =
   case e of
-      ConI n => IntT n
-    | ConB b => BoolT b
-    | ESeq seq => SeqT []
+      ConI n => IntV n
+    | ConB b => BoolV b
+    | ESeq seq => SeqV []
     | Var str => lookup env str
     | Let (name, exp1, exp2) =>
       let
-        value = eval exp1 env
+        val value = eval exp1 env
       in
-        eval(exp2, (name, value)::env)
+        eval exp2 ((name, value)::env)
       end
     | Letrec (fname, atype, aname, rtype, ex1, ex2) =>
       let 
         val funct = (fname, Clos(fname, aname, ex1, env))
       in
-        eval ex2 funct::env
+        eval ex2 (funct::env)
       end
-    (*| Prim1 (operator, exp) =>
+    | Prim1 (operator, exp) =>
       let
-        val ty = teval exp env
+        val value = eval exp env
       in
         case operator of 
-            "!" =>
-          | "hd" => let in case ty of
-              SeqT(IntT) => IntT
-            | SeqT(BoolT) => BoolT
-            | SeqT(FunT(a,b)) => FunT(a,b)
-            | SeqT(ListT []) => raise EmptySeq
-            | SeqT(ListT l) => ListT l
-            | SeqT(SeqT(s)) => SeqT s
-            | _ => raise UnknownType
+            "!" => ( case value of BoolV b => BoolV (not b)
+                                 | _ => raise Impossible )
+          | "hd" => ( case value of
+              SeqV [] => raise HDEmptySeq
+            | SeqV seq => hd seq
+            | _ => raise Impossible )
+          | "tl" => ( case value of
+              SeqV [] => raise TLEmptySeq
+            | SeqV seq => SeqV (tl seq)
+            | _ => raise Impossible )
+          | "ise" => ( case value of
+              SeqV [] => BoolV true
+            | SeqV seq => BoolV false
+            | _ => raise Impossible )
+          | "print" => 
+            let 
+              val printing = print(val2string(value) ^ "\n")
+            in
+              ListV []
             end
-          | "tl" => let in case ty of 
-              SeqT(ListT []) => raise EmptySeq
-            | SeqT(_) => ty
-            | _ => raise UnknownType
-            end (*SeqT ou ListT?? Pode SeqT(seq)??*)
-          | "ise" => let in case ty of
-              SeqT(_) => BoolT
-            | _ => raise UnknownType
-            end
-          | "print" => ListT []
-          | "-" => if ty = IntT then IntT
-                else raise UnknownType
-          | _ => raise UnknownType
+          | "-" => ( case value of IntV n => IntV (~ n)
+                                 | _ => raise Impossible)
+          | _ => raise Impossible
       end
-    | Prim2 (operator, exp1, exp2) =>
+    ;
+
+
+
+
+    (*| Prim2 (operator, exp1, exp2) =>
       let 
         val ty1 = teval exp1 env
         val ty2 = teval exp2 env
@@ -150,4 +158,3 @@ fun eval (e:expr) (p:plcVal env) : plcVal =
         in
           FunT(ty,texp)
         end*)
-    ;
