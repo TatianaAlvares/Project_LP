@@ -9,6 +9,12 @@ exception TLEmptySeq
 exception ValueNotFoundInMatch
 exception NotAFunc
 
+fun getInt (IntV n) = n
+	| getInt _ = raise Impossible; 
+
+fun getBool (BoolV b) = b
+	| getBool _ = raise Impossible 
+
 fun eval (e:expr) (env:plcVal env) : plcVal =
   case e of
       ConI n => IntV n
@@ -32,8 +38,7 @@ fun eval (e:expr) (env:plcVal env) : plcVal =
         val value = eval exp env
       in
         case operator of 
-            "!" => ( case value of BoolV b => BoolV (not b)
-                                 | _ => raise Impossible )
+            "!" => BoolV(not(getBool value))
           | "hd" => ( case value of
               SeqV [] => raise HDEmptySeq
             | SeqV seq => hd seq
@@ -52,49 +57,33 @@ fun eval (e:expr) (env:plcVal env) : plcVal =
             in
               ListV []
             end
-          | "-" => ( case value of IntV n => IntV (~ n)
-                                 | _ => raise Impossible)
+          | "-" => IntV(~(getInt value))
           | _ => raise Impossible
       end
-    ;
-
-
-
-
-    (*| Prim2 (operator, exp1, exp2) =>
+    | Prim2 (operator, exp1, exp2) =>
       let 
-        val ty1 = teval exp1 env
-        val ty2 = teval exp2 env
+        val value1 = eval exp1 env
+        val value2 = eval exp2 env
       in
         case operator of
-            "&&" => if ty1 = BoolT andalso ty2 = BoolT then BoolT
-                    else raise UnknownType
-          | "+" => if ty1 = IntT andalso ty2 = IntT then IntT
-                   else raise UnknownType
-          | "-" => if ty1 = IntT andalso ty2 = IntT then IntT
-                   else raise UnknownType
-          | "*" => if ty1 = IntT andalso ty2 = IntT then IntT
-                   else raise UnknownType
-          | "/" => if ty1 = IntT andalso ty2 = IntT then IntT
-                   else raise UnknownType
-          | "=" => if ty1 = ty2 then
-                      if IsEqType ty1 then BoolT
-                      else raise CallTypeMisM
-                   else raise NotEqTypes
-          | "!=" => if ty1 = ty2 then
-                      if IsEqType ty1 then BoolT
-                      else raise CallTypeMisM
-                    else raise NotEqTypes
-          | "<" => if ty1 = IntT andalso ty2 = IntT then BoolT
-                   else raise UnknownType
-          | "<=" => if ty1 = IntT andalso ty2 = IntT then BoolT
-                    else raise UnknownType
-          | "::" => if ty2 = SeqT(ty1) then SeqT(ty1)
-                    else raise UnknownType
-          | ";" => ty2
-          | _ => raise UnknownType
+            "&&" => BoolV ((getBool value1) andalso (getBool value2))
+          | "+" => IntV ((getInt value1) + (getInt value2))
+          | "-" => IntV ((getInt value1) - (getInt value2))
+          | "*" => IntV ((getInt value1) * (getInt value2))
+          | "/" => IntV ((getInt value1) div (getInt value2))
+          | "=" => BoolV (value1 = value2)
+          | "!=" => BoolV (not (value1 = value2))
+          | "<" => BoolV ((getInt value1) < (getInt value2))
+          | "<=" => BoolV ((getInt value1) <= (getInt value2))
+          | "::" => ( case (value1, value2) of
+                      (SeqV a, SeqV b) => SeqV (a @ b)
+                    | (_, SeqV b) => SeqV (value1::b)
+                    | _ => raise Impossible
+            )
+          | ";" => value2
+          | _ => raise Impossible
       end
-    | If (cond, iftrue, iffalse) =>
+    (*| If (cond, iftrue, iffalse) =>
       let
         val tcon = teval cond env
         val ift = teval iftrue env
@@ -158,3 +147,4 @@ fun eval (e:expr) (env:plcVal env) : plcVal =
         in
           FunT(ty,texp)
         end*)
+  ;
