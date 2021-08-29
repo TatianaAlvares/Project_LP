@@ -170,7 +170,7 @@ fun teval (ex:expr) (env: plcType env) : plcType =
           case tlist of 
               ListT [] => raise ListOutOfRange
             | ListT l =>
-                if num >= 0 andalso num < List.length(l) then List.nth(l, num)
+                if num > 0 andalso num < List.length(l) then List.nth(l, num - 1)
                 else raise ListOutOfRange
             | _ => raise OpNonList
         end

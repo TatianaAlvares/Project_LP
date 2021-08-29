@@ -83,18 +83,13 @@ fun eval (e:expr) (env:plcVal env) : plcVal =
           | ";" => value2
           | _ => raise Impossible
       end
-    (*| If (cond, iftrue, iffalse) =>
+    | If (cond, iftrue, iffalse) =>
       let
-        val tcon = teval cond env
-        val ift = teval iftrue env
-        val iff = teval iffalse env
+        val value = eval cond env
       in
-        if tcon = BoolT then
-          if ift = iff then ift
-          else raise DiffBrTypes
-        else raise IfCondNotBool
+        if getBool value then eval iftrue env else eval iffalse env
       end
-    | Match (name, cases) =>
+    (*| Match (name, cases) =>
       let
         val tyname = teval name env
         val tyheadcase = teval (#2(hd(cases))) env
@@ -109,42 +104,36 @@ fun eval (e:expr) (env:plcVal env) : plcVal =
           if List.all rettype cases then tyheadcase
           else raise MatchResTypeDiff
         else raise MatchCondTypesDiff
-      end
+      end*)
     | Call (fname, arg) => 
         let
-          val tyname = teval fname env
-          val tyarg = teval arg env
+          val funclos = eval fname env
+          val funarg = eval arg env
         in
-          case tyname of 
-              FunT(entry, return) =>
-                if tyarg = entry then return
-                else raise CallTypeMisM
-            | _ => raise NotFunc
+          case funclos of 
+              Clos("", str, exp, cenv) => eval exp ((str, funarg)::cenv)
+            | Clos(n, str, exp, cenv) => eval exp ((str, funarg)::(n, funclos)::cenv)
+            | _ => raise NotAFunc
         end
-    | List [] => ListT []
+    | List [] => ListV []
     | List l => 
         if List.length(l) >= 1 then
           let
-            fun maplist x = teval x env;
+            fun maplist x = eval x env;
           in
-            ListT(map maplist l)
+            ListV(map maplist l)
           end
         else raise UnknownType
     | Item (num, lexp)=>
         let
-          val tlist = teval lexp env
+          val l = eval lexp env
         in
-          case tlist of 
-              ListT [] => raise ListOutOfRange
-            | ListT l =>
-                if num >= 0 andalso num < List.length(l) then List.nth(l, num)
-                else raise ListOutOfRange
-            | _ => raise OpNonList
+          case l of 
+              ListV [] => raise Impossible
+            | ListV l =>
+                if num > 0 andalso num <= List.length(l) then List.nth(l, num - 1)
+                else raise Impossible
+            | _ => raise Impossible
         end
-    | Anon (ty, str, exp) =>
-        let
-          val texp = teval exp ((str, ty)::env)
-        in
-          FunT(ty,texp)
-        end*)
+    | Anon (ty, str, exp) => Clos("", str, exp, env)
   ;
