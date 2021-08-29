@@ -127,10 +127,43 @@ fun teval (ex:expr) (env: plcType env) : plcType =
           else raise DiffBrTypes
         else raise IfCondNotBool
       end
-    (*| Match () =>
-    | Call () =>
-    | List =>*)
-    | Item (num, lexp)=> (*It doesnt fucking works! Fantastic!*)
+    | Match (name, cases) =>
+      let
+        val tyname = teval name env
+        val tyheadcase = teval (#2(hd(cases))) env
+        fun search (opt, wdo) =
+          if isSome opt then
+            tyname = teval (valOf(opt)) env
+          else true
+        fun rettype (opt, wdo) = tyheadcase = teval wdo env
+      in
+        if cases = [] then raise NoMatchResults
+        else if List.all search cases then
+          if List.all rettype cases then tyheadcase
+          else raise MatchResTypeDiff
+        else raise MatchCondTypesDiff
+      end
+    | Call (fname, arg) => 
+        let
+          val tyname = teval fname env
+          val tyarg = teval arg env
+        in
+          case tyname of 
+              FunT(entry, return) =>
+                if tyarg = entry then return
+                else raise CallTypeMisM
+            | _ => raise NotFunc
+        end
+    | List [] => ListT []
+    | List l => 
+        if List.length(l) >= 1 then
+          let
+            fun maplist x = teval x env;
+          in
+            ListT(map maplist l)
+          end
+        else raise UnknownType
+    | Item (num, lexp)=>
         let
           val tlist = teval lexp env
         in
@@ -141,7 +174,12 @@ fun teval (ex:expr) (env: plcType env) : plcType =
                 else raise ListOutOfRange
             | _ => raise OpNonList
         end
-    | Anon => true
-    | _ => raise UnknownType
+    | Anon (ty, str, exp) =>
+        let
+          val texp = teval exp ((str, ty)::env)
+        in
+          FunT(ty,texp)
+        end
+    ;
 
           
