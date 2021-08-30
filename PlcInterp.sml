@@ -1,7 +1,4 @@
-(* PlcInterp *)
-use "PlcChecker.sml";
-use "Environ.sml";
-use "Absyn.sml";
+
 
 exception Impossible
 exception HDEmptySeq
@@ -93,8 +90,9 @@ fun eval (e:expr) (env:plcVal env) : plcVal =
       if cases = [] then raise ValueNotFoundInMatch
       else 
         let
+          val ename = eval name env
           fun search (opt, wtd : expr) =
-            if Option.isSome opt andalso name = Option.valOf opt then true
+            if Option.isSome opt andalso ename = eval (Option.valOf opt) env then true
             else if not(Option.isSome opt) then true
             else false
           val opitem = List.find search cases
@@ -120,7 +118,7 @@ fun eval (e:expr) (env:plcVal env) : plcVal =
           in
             ListV(map maplist l)
           end
-        else raise UnknownType
+        else raise Impossible
     | Item (num, lexp)=>
         let
           val l = eval lexp env
